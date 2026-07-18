@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>switchboard — dashboard</title>
+<style>
+:root {
+  --bg: #1E1E2E;
+  --fg: #CDD6F4;
+  --purple: #BD93F9;
+  --green: #A6E3A1;
+  --red: #F38BA8;
+  --yellow: #F9E2AF;
+  --line: #2A2A3C;
+  --dim: #7F849C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+.terminal {
+  max-width: 720px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--line);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.r { background: var(--red); }
+.dot.y { background: var(--yellow); }
+.dot.g { background: var(--green); }
+.statusbar span { margin-left: 0.5rem; color: var(--dim); font-size: 12px; }
+.body { padding: 1.5rem 1rem; }
+h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--purple);
+  margin-bottom: 1rem;
+}
+h1::before { content: "~> "; color: var(--green); }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.row:last-child { border-bottom: none; }
+.perms { color: var(--dim); font-size: 12px; }
+.host { flex: 1; min-width: 10rem; }
+.http { color: var(--dim); font-size: 12px; min-width: 3.5rem; }
+.state { min-width: 8.5rem; font-size: 12px; }
+.state.live { color: var(--green); }
+.state.maintenance { color: var(--yellow); }
+.state.down { color: var(--red); }
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.switch input {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 12px;
+  background: var(--green);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.switch input:checked { background: var(--yellow); }
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg);
+  transition: transform 0.2s;
+}
+.switch input:checked::after { transform: translateX(20px); }
+.switch input:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+.switch input:disabled { opacity: 0.5; cursor: wait; }
+.footer {
+  margin-top: 1.25rem;
+  color: var(--dim);
+  font-size: 12px;
+}
+.footer .err { color: var(--red); }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="statusbar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span>switchboard — ~/dashboard</span>
+  </div>
+  <div class="body">
+    <h1>switchboard --list</h1>
+    <div id="sites" aria-live="polite">loading…</div>
+    <p class="footer" id="footer">toggle = maintenance mode (creates nginx flag file)</p>
+  </div>
+</div>
+<script>
+const sitesEl = document.getElementById("sites");
+const footerEl = document.getElementById("footer");
+
+function stateLabel(site) {
+  if (site.state === "live") return "● live";
+  if (site.state === "maintenance") return "◐ maintenance";
+  return "○ down";
+}
+
+function render(sites) {
+  sitesEl.replaceChildren();
+  for (const site of sites) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const perms = document.createElement("span");
+    perms.className = "perms";
+    perms.textContent = "drwxr-xr-x";
+
+    const host = document.createElement("span");
+    host.className = "host";
+    host.textContent = site.host;
+
+    const http = document.createElement("span");
+    http.className = "http";
+    http.textContent = site.http_status === null ? "[---]" : `[${site.http_status}]`;
+
+    const state = document.createElement("span");
+    state.className = `state ${site.state}`;
+    state.textContent = stateLabel(site);
+
+    const label = document.createElement("label");
+    label.className = "switch";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = site.maintenance;
+    input.setAttribute("aria-label", `maintenance mode for ${site.host}`);
+    input.addEventListener("change", () => toggle(site.host, input));
+    label.appendChild(input);
+
+    row.append(perms, host, http, state, label);
+    sitesEl.appendChild(row);
+  }
+}
+
+async function load() {
+  try {
+    const res = await fetch("/api/sites");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    render(await res.json());
+    footerEl.textContent = "toggle = maintenance mode (creates nginx flag file)";
+    footerEl.classList.remove("err");
+  } catch (err) {
+    footerEl.textContent = `error: ${err.message}`;
+    footerEl.classList.add("err");
+  }
+}
+
+async function toggle(host, input) {
+  input.disabled = true;
+  try {
+    const res = await fetch(`/api/sites/${encodeURIComponent(host)}/toggle`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (err) {
+    footerEl.textContent = `error toggling ${host}: ${err.message}`;
+    footerEl.classList.add("err");
+  }
+  await load();
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

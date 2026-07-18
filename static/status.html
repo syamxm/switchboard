@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>status — syamxm.com</title>
+<style>
+:root {
+  --bg: #1E1E2E;
+  --fg: #CDD6F4;
+  --purple: #BD93F9;
+  --green: #A6E3A1;
+  --red: #F38BA8;
+  --yellow: #F9E2AF;
+  --line: #2A2A3C;
+  --dim: #7F849C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+.terminal {
+  max-width: 720px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--line);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.r { background: var(--red); }
+.dot.y { background: var(--yellow); }
+.dot.g { background: var(--green); }
+.statusbar span { margin-left: 0.5rem; color: var(--dim); font-size: 12px; }
+.body { padding: 1.5rem 1rem; }
+h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--purple);
+  margin-bottom: 1rem;
+}
+h1::before { content: "~> "; color: var(--green); }
+.overall {
+  padding: 0.5rem 0.25rem 1rem;
+  font-weight: 700;
+}
+.overall.ok { color: var(--green); }
+.overall.degraded { color: var(--yellow); }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.row:last-child { border-bottom: none; }
+.perms { color: var(--dim); font-size: 12px; }
+.host { flex: 1; min-width: 10rem; }
+.badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid;
+  border-radius: 4px;
+}
+.badge.live { color: var(--green); border-color: var(--green); }
+.badge.maintenance { color: var(--yellow); border-color: var(--yellow); }
+.badge.down { color: var(--red); border-color: var(--red); }
+.footer {
+  margin-top: 1.25rem;
+  color: var(--dim);
+  font-size: 12px;
+}
+.footer .err { color: var(--red); }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="statusbar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span>status.syamxm.com</span>
+  </div>
+  <div class="body">
+    <h1>switchboard status --all</h1>
+    <p class="overall" id="overall">checking…</p>
+    <div id="sites" aria-live="polite"></div>
+    <p class="footer">updates every 30s</p>
+  </div>
+</div>
+<script>
+const sitesEl = document.getElementById("sites");
+const overallEl = document.getElementById("overall");
+
+const BADGES = {
+  live: "LIVE",
+  maintenance: "MAINT",
+  down: "DOWN",
+};
+
+function render(data) {
+  if (data.all_ok) {
+    overallEl.textContent = "● all systems green";
+    overallEl.className = "overall ok";
+  } else {
+    const n = data.sites.filter((s) => s.state !== "live").length;
+    overallEl.textContent = `◐ ${n} site${n === 1 ? "" : "s"} not live`;
+    overallEl.className = "overall degraded";
+  }
+
+  sitesEl.replaceChildren();
+  for (const site of data.sites) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const perms = document.createElement("span");
+    perms.className = "perms";
+    perms.textContent = "dr-xr-xr-x";
+
+    const host = document.createElement("span");
+    host.className = "host";
+    host.textContent = site.host;
+
+    const badge = document.createElement("span");
+    badge.className = `badge ${site.state}`;
+    badge.textContent = BADGES[site.state] ?? site.state;
+
+    row.append(perms, host, badge);
+    sitesEl.appendChild(row);
+  }
+}
+
+async function load() {
+  try {
+    const res = await fetch("/api/status");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    render(await res.json());
+  } catch (err) {
+    overallEl.textContent = `○ status unavailable (${err.message})`;
+    overallEl.className = "overall degraded";
+  }
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
