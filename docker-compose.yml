@@ -1,0 +1,19 @@
+services:
+  switchboard:
+    build: .
+    container_name: switchboard
+    restart: unless-stopped
+    environment:
+      SITES: ${SITES}
+      FLAGS_DIR: /flags
+    volumes:
+      - /etc/nginx/flags:/flags
+    ports:
+      - "127.0.0.1:8100:8000"
+      - "${TAILSCALE_IP}:8100:8000"
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    external: true
