@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>switchboard — ~/switchboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231E1E2E'/><text x='50' y='70' font-size='54' text-anchor='middle' fill='%23BD93F9' font-family='monospace'>~%3E</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
@@ -184,8 +185,9 @@ main{padding-top:clamp(96px,12vh,140px)}
   border:1px solid var(--line);border-radius:12px;
   background:var(--bg-raise);
   cursor:pointer;
-  transition:border-color .3s var(--ease),box-shadow .3s var(--ease);
+  transition:border-color .3s var(--ease),box-shadow .3s var(--ease),transform .15s var(--ease);
 }
+.switch:active:not([disabled]){transform:scale(.94)}
 .switch .knob{
   position:absolute;top:3px;left:4px;
   width:16px;height:16px;border-radius:50%;
@@ -246,7 +248,7 @@ main{padding-top:clamp(96px,12vh,140px)}
     <div class="cmdline">
       <span class="prompt"><span class="tick">~&gt;</span> </span><span class="cmd">systemctl</span> <span class="flag">status --all</span><span class="cursor blink"></span>
     </div>
-    <div id="list" aria-live="polite"></div>
+    <div id="list" aria-live="polite"><span class="comment" id="loading"># scanning services ...<span class="cursor blink"></span></span></div>
     <div class="log" id="log" aria-live="polite">
       <span class="label"># action log — last 5</span>
     </div>
@@ -330,6 +332,8 @@ main{padding-top:clamp(96px,12vh,140px)}
   }
 
   function render(sites){
+    var loading = document.getElementById("loading");
+    if(loading) loading.remove();
     sites.forEach(updateRow);
     var green = sites.filter(function(s){ return s.state === "live"; }).length;
     greencount.textContent = green + "/" + sites.length + " services green";
