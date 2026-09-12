@@ -87,3 +87,10 @@ def test_api_sites_reports_maintenance_state():
 
     client.post("/api/sites/syamxm.com/toggle")
     switchboard._cache["expires"] = 0.0
+
+
+def test_pages_are_revalidated_so_stale_markup_cannot_pair_with_new_assets():
+    for path in ("/", "/status"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "no-cache"

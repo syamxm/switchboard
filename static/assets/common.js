@@ -79,6 +79,7 @@ var SB = (function(){
   // Paints the verdict as block letters and hands the column count to CSS,
   // which sizes the type so the widest line fits its container.
   function paintVerdict(ansiEl, text){
+    if(!ansiEl) return false;
     var art = ansiArt(text);
     if(!art){
       document.body.classList.remove("ansi-on");
