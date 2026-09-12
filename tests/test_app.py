@@ -68,6 +68,13 @@ def test_api_status_has_no_toggle_info():
     switchboard._cache["expires"] = 0.0
 
 
+def test_only_http_200_is_live():
+    for status in (200, 201, 204, 301, 302, 401, 403, 404, 500, 502, None):
+        assert switchboard.state_for("cv.syamxm.com", status) == (
+            "live" if status == 200 else "down"
+        )
+
+
 def test_api_sites_reports_maintenance_state():
     switchboard._cache["statuses"] = {"syamxm.com": 200, "cv.syamxm.com": 503}
     switchboard._cache["expires"] = float("inf")

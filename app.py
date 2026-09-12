@@ -43,7 +43,7 @@ def flag_path(host: str) -> Path:
 def state_for(host: str, http_status: int | None) -> str:
     if flag_path(host).exists():
         return "maintenance"
-    if http_status is not None and http_status < 500:
+    if http_status == 200:
         return "live"
     return "down"
 
