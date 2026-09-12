@@ -4,55 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>status — syamxm.com</title>
-<meta name="description" content="Live service status for syamxm.com and self-hosted projects.">
+<meta name="description" content="Live availability of syamxm.com and the self-hosted projects behind it.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0D0B14">
 <meta property="og:title" content="status — syamxm.com">
-<meta property="og:description" content="Live service status for syamxm.com and self-hosted projects.">
+<meta property="og:description" content="Live availability of syamxm.com and the self-hosted projects behind it.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://status.syamxm.com/status">
-<meta name="theme-color" content="#0D0B14">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230D0B14'/%3E%3Ctext x='32' y='44' font-size='32' text-anchor='middle' fill='%237C3AED' font-family='monospace'%3E~%26gt;%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/assets/common.css?v=1">
-<link rel="stylesheet" href="/assets/status.css?v=1">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://status.syamxm.com/status">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D0B14'/%3E%3Crect x='6' y='28' width='52' height='3' fill='%237C3AED'/%3E%3Ccircle cx='18' cy='44' r='5' fill='%23A6E3A1'/%3E%3Ccircle cx='32' cy='44' r='5' fill='%23F9E2AF'/%3E%3Ccircle cx='46' cy='44' r='5' fill='%23F38BA8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/assets/common.css?v=2">
+<link rel="stylesheet" href="/assets/status.css?v=2">
 </head>
 <body>
 
 <a class="skiplink" href="#services">skip to services</a>
-<header class="statusbar">
+
+<header class="rack">
   <a href="https://syamxm.com">~&gt; syamxm</a>
-  <span class="workspace">status</span>
+  <span class="face">status</span>
   <span class="right" id="checked">unverified</span>
 </header>
 
+<aside class="railtag" aria-hidden="true">
+  <span>switchboard · read-only · status.syamxm.com</span>
+</aside>
+
 <div class="shell">
 <main>
-  <section>
-    <div class="cmdline">
-      <span class="prompt"><span class="tick">~&gt;</span> </span><span class="cmd">switchboard</span> <span class="arg">status</span> <span class="flag">--all</span><span class="cursor" aria-hidden="true"></span>
-    </div>
+
+  <section class="ln">
+    <p class="cmdline">
+      <span class="prompt"><span class="tick">~&gt;</span></span>
+      <span class="cmd">switchboard</span>
+      <span class="arg">status</span>
+      <span class="flag">--all</span><span class="cursor" aria-hidden="true"></span>
+    </p>
     <div class="verdict">
-      <p class="eyeline">syamxm.com / service availability</p>
-      <h1 class="banner" id="banner" role="status">availability unverified</h1>
-      <p class="counts" id="counts">waiting for a status response</p>
-    </div>
-    <ul class="board" id="board" aria-hidden="true"></ul>
-    <div class="readout" id="services" tabindex="-1">
-      <h2 class="eyeline">~/services</h2>
-      <span class="poll" id="poll">automatic updates require javascript</span>
-    </div>
-    <div class="columnhead" aria-hidden="true"><span>service</span><span>reported state</span></div>
-    <div id="list" aria-live="polite" aria-label="service states"></div>
-    <p class="notice" id="notice" role="status"></p>
-    <noscript><p class="notice">javascript is off. live availability cannot be verified. enable javascript to load service states.</p></noscript>
-    <div class="transcript" id="transcript" aria-hidden="true"></div>
-    <div class="foot ln">
-      <span><a href="https://syamxm.com">syamxm.com</a> / switchboard</span>
-      <span id="footchecked">read-only · responses may be cached for 30s</span>
+      <div>
+        <p class="eyeline">syamxm.com / service availability</p>
+        <h1 class="banner" id="banner" role="status">availability unverified</h1>
+        <p class="counts" id="counts">waiting for a status response</p>
+        <div class="readout">
+          <span class="poll" id="poll">automatic updates require javascript</span>
+          <span>checks cached up to 30s at the origin</span>
+        </div>
+      </div>
     </div>
   </section>
+
+  <section class="ln" aria-label="signal overview">
+    <ul class="board" id="board" aria-hidden="true"></ul>
+  </section>
+
+  <section id="services" tabindex="-1">
+    <div class="bayhead ln">
+      <h2>service channels</h2>
+      <span class="eyeline">last 24 polls seen by this page</span>
+    </div>
+    <div class="columnhead" aria-hidden="true">
+      <span class="idx-head">#</span>
+      <span>service</span>
+      <span class="history-head">recent polls</span>
+      <span>state</span>
+    </div>
+    <div id="list" aria-live="polite" aria-label="service states"></div>
+    <p class="notice" id="notice" role="status"></p>
+    <noscript>
+      <p class="notice">javascript is off, so this page cannot poll for state. service
+      availability is unverified here — try the sites directly.</p>
+    </noscript>
+    <div class="transcript" id="transcript" aria-hidden="true"></div>
+  </section>
+
+  <footer class="foot ln">
+    <span><a href="https://syamxm.com">syamxm.com</a> / switchboard</span>
+    <span id="footchecked">read-only · responses may be cached for 30s</span>
+  </footer>
+
 </main>
 </div>
 
-<script src="/assets/common.js?v=1"></script>
-<script src="/assets/status.js?v=1"></script>
+<script src="/assets/common.js?v=2"></script>
+<script src="/assets/status.js?v=2"></script>
 </body>
 </html>

@@ -34,36 +34,37 @@
     })) throw new Error("invalid status response");
   }
 
-  function makeRow(site){
+  function makeRow(site, index){
     var row = document.createElement("div");
     row.className = "svc ln";
 
-    var perm = document.createElement("span");
-    perm.className = "perm";
-    perm.setAttribute("aria-hidden", "true");
-    perm.textContent = "dr-xr-xr-x";
-
-    var ind = document.createElement("span");
-    ind.className = "ind";
-    ind.setAttribute("aria-hidden", "true");
+    var idx = document.createElement("span");
+    idx.className = "idx";
+    idx.setAttribute("aria-hidden", "true");
+    idx.textContent = (index + 1 < 10 ? "0" : "") + (index + 1);
 
     var name = document.createElement("span");
     name.className = "name";
     name.textContent = site.host;
 
+    var history = SB.makeHistory();
+
     var badge = document.createElement("span");
     badge.className = "badge";
 
-    row.append(perm, ind, name, badge);
+    row.append(idx, name, history, badge);
     list.appendChild(row);
     var port = SB.makePort(board, site);
-    return {row: row, badge: badge, port: port.port, signal: port.signal, state: null};
+    return {row: row, badge: badge, history: history,
+      port: port.port, jack: port.jack, state: null};
   }
 
   function render(sites){
+    SB.hideSkeleton();
     SB.dropMissingRows(rows, sites);
-    sites.forEach(function(site){
-      var r = rows[site.host] || (rows[site.host] = makeRow(site));
+    sites.forEach(function(site, index){
+      var r = rows[site.host] || (rows[site.host] = makeRow(site, index));
+      SB.pushHistory(r, site.state);
       if(r.state === site.state) return;
       r.row.className = "svc ln in " + site.state + (r.state ? " changed" : "");
       r.badge.className = "badge " + site.state;
@@ -82,7 +83,13 @@
       empty = document.createElement("p");
       empty.id = "empty";
       empty.className = "empty";
-      empty.textContent = "no service states to report.";
+      var title = document.createElement("b");
+      title.textContent = "nothing to report";
+      var hint = document.createElement("span");
+      hint.textContent =
+        "the switchboard is running but has no services to watch. " +
+        "states will appear here as soon as it has some.";
+      empty.append(title, hint);
       list.appendChild(empty);
     }
     if(sites.length && empty) empty.remove();
@@ -122,6 +129,7 @@
     } catch(err){
       failed = true;
       poll.dataset.poll = "failed";
+      Object.keys(rows).forEach(function(host){ SB.pushHistory(rows[host], "gap"); });
       bootLine("[!] first request failed · retry scheduled");
     } finally {
       fetching = false;
@@ -136,6 +144,7 @@
     if(!document.hidden) load();
     tickChecked();
   });
+  SB.showSkeleton(list);
   bootLine("[init] switchboard · requesting /api/status");
   load();
   setInterval(function(){

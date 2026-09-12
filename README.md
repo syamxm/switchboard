@@ -45,6 +45,25 @@ The two pages differ enough to keep apart: they call different endpoints, have
 different response shapes and validation rules, and only the dashboard writes.
 `common.js` holds what is identical in both, and nothing else.
 
+### Design notes
+
+Both pages are one rack panel: a fixed top strip, a vertical rack label down
+the left edge on wide screens, and a hard-left asymmetric verdict block. There
+is one accent (violet) and three semantic state hues; everything else is
+carried by weight, spacing and a single cool-violet gray family.
+
+Three things on the page are data, not decoration, and should stay that way:
+
+- The **jackfield** above the channels — one module per service, state named in
+  text next to the lamp.
+- The **poll history** on each channel strip — one cell per poll this page has
+  observed, oldest on the left. A failed poll writes a hatched gap, so an
+  outage in the checker reads differently from a service that was really down.
+  It lives in memory only and starts empty on every load.
+- The **state bar** in each row's gutter.
+
+Anything added here should say something true about the system or come out.
+
 ### Serving the assets
 
 Only `static/assets/` is mounted, at `/assets`. Mounting all of `static/` would

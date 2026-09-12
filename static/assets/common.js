@@ -6,6 +6,7 @@ var SB = (function(){
   var REQUEST_TIMEOUT_MS = 10000;
   var STALE_AFTER_SECONDS = 45;
   var POLL_INTERVAL_MS = 30000;
+  var HISTORY_SLOTS = 24;
 
   function firstVisit(storageKey){
     try { return !sessionStorage.getItem(storageKey); } catch(err){ return true; }
@@ -18,26 +19,49 @@ var SB = (function(){
   function makePort(board, site){
     var port = document.createElement("li");
     port.className = "port";
-    var signal = document.createElement("span");
-    signal.className = "signal";
+    var jack = document.createElement("span");
+    jack.className = "jack";
     var label = document.createElement("span");
     label.className = "label";
     label.textContent = site.host;
-    port.append(signal, label);
+    port.append(jack, label);
     board.appendChild(port);
-    return {port: port, signal: signal};
+    return {port: port, jack: jack};
   }
 
   function updatePort(r, state){
     r.port.dataset.state = state;
-    r.signal.textContent = state === "live" ? "[━●━] live" :
-      state === "maintenance" ? "[━◐ ] maintenance" : "[━× ] down";
+    r.jack.textContent = state;
   }
 
+  // One cell per poll this page has observed, oldest on the left. A failed
+  // poll writes a gap so an outage in the checker reads differently from a
+  // service that was actually down.
+  function makeHistory(){
+    var strip = document.createElement("div");
+    strip.className = "history";
+    strip.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < HISTORY_SLOTS; i++) strip.appendChild(document.createElement("i"));
+    return strip;
+  }
+
+  function pushHistory(r, state){
+    if(!r.seen) r.seen = [];
+    r.seen.push(state);
+    if(r.seen.length > HISTORY_SLOTS) r.seen.shift();
+    var cells = r.history.children;
+    var offset = HISTORY_SLOTS - r.seen.length;
+    for (var i = 0; i < cells.length; i++){
+      var seen = i < offset ? null : r.seen[i - offset];
+      if(seen) cells[i].setAttribute("data-seen", seen);
+      else cells[i].removeAttribute("data-seen");
+    }
+  }
+
+  // The state bar and the badge colour carry the same signal, so the badge
+  // only needs the word. No glyph noise.
   function badgeText(state){
-    if(state === "live") return "● live";
-    if(state === "maintenance") return "◐ maintenance";
-    return "○ down";
+    return state;
   }
 
   function countState(sites, state){
@@ -68,6 +92,25 @@ var SB = (function(){
       rows[host].port.remove();
       delete rows[host];
     });
+  }
+
+  // Rows shaped like the real thing while the first poll is in flight.
+  function showSkeleton(list){
+    var skeleton = document.createElement("div");
+    skeleton.className = "skeleton";
+    skeleton.id = "skeleton";
+    skeleton.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < 3; i++){
+      var bone = document.createElement("div");
+      bone.className = "bone";
+      skeleton.appendChild(bone);
+    }
+    list.appendChild(skeleton);
+  }
+
+  function hideSkeleton(){
+    var skeleton = document.getElementById("skeleton");
+    if(skeleton) skeleton.remove();
   }
 
   function revealLines(){
@@ -116,6 +159,10 @@ var SB = (function(){
     rememberVisit: rememberVisit,
     makePort: makePort,
     updatePort: updatePort,
+    makeHistory: makeHistory,
+    pushHistory: pushHistory,
+    showSkeleton: showSkeleton,
+    hideSkeleton: hideSkeleton,
     badgeText: badgeText,
     summarize: summarize,
     dropMissingRows: dropMissingRows,

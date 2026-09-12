@@ -58,14 +58,14 @@
   clock.textContent = hms();
   setInterval(function(){ clock.textContent = hms(); tickChecked(); }, 1000);
 
-  function makeRow(site){
+  function makeRow(site, index){
     var row = document.createElement("div");
     row.className = "svc ln";
 
-    var perm = document.createElement("span");
-    perm.className = "perm";
-    perm.setAttribute("aria-hidden", "true");
-    perm.textContent = "drwxr-xr-x";
+    var idx = document.createElement("span");
+    idx.className = "idx";
+    idx.setAttribute("aria-hidden", "true");
+    idx.textContent = (index + 1 < 10 ? "0" : "") + (index + 1);
 
     var name = document.createElement("a");
     name.className = "name";
@@ -73,6 +73,8 @@
     name.target = "_blank";
     name.rel = "noopener";
     name.textContent = site.host;
+
+    var history = SB.makeHistory();
 
     var http = document.createElement("span");
     http.className = "http";
@@ -92,15 +94,16 @@
     sw.append(switchLabel, switchState);
     sw.addEventListener("click", function(){ toggle(site.host, sw); });
 
-    row.append(perm, name, http, badge, sw);
+    row.append(idx, name, history, http, badge, sw);
     list.appendChild(row);
     var port = SB.makePort(board, site);
     return {row: row, http: http, badge: badge, sw: sw, switchState: switchState,
-      port: port.port, signal: port.signal, state: null};
+      history: history, port: port.port, jack: port.jack, state: null};
   }
 
-  function updateRow(site){
-    var r = rows[site.host] || (rows[site.host] = makeRow(site));
+  function updateRow(site, index){
+    var r = rows[site.host] || (rows[site.host] = makeRow(site, index));
+    SB.pushHistory(r, site.state);
     if(r.state !== site.state){
       r.row.className = "svc ln in " + site.state + (r.state ? " changed" : "");
       r.badge.className = "badge " + site.state;
@@ -118,6 +121,7 @@
   }
 
   function render(sites){
+    SB.hideSkeleton();
     SB.dropMissingRows(rows, sites);
     sites.forEach(updateRow);
 
@@ -132,7 +136,13 @@
       empty = document.createElement("p");
       empty.id = "empty";
       empty.className = "empty";
-      empty.textContent = "no services configured. set SITES on the server to add hosts.";
+      var title = document.createElement("b");
+      title.textContent = "no services configured";
+      var hint = document.createElement("span");
+      hint.textContent =
+        "set SITES in .env to a comma-separated list of hosts, then restart the " +
+        "container. they will show up here on the next poll.";
+      empty.append(title, hint);
       list.appendChild(empty);
     }
     if(sites.length && empty) empty.remove();
@@ -184,6 +194,7 @@
     } catch(err){
       failed = true;
       poll.dataset.poll = "failed";
+      Object.keys(rows).forEach(function(host){ SB.pushHistory(rows[host], "gap"); });
       bootLine("[!] first request failed · retry scheduled");
     } finally {
       startup = false;
@@ -224,6 +235,7 @@
     if(!document.hidden) load();
     tickChecked();
   });
+  SB.showSkeleton(list);
   bootLine("[init] switchboard · requesting /api/sites");
   load();
   setInterval(function(){

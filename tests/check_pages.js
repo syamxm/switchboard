@@ -7,10 +7,11 @@ const readAsset = (name) => readFileSync(join(__dirname, "../static/assets", nam
 
 // Assets a page pulls in, in document order, with their query string stripped.
 // Anything not served from /assets/ would be a request off this origin.
-function assetsOf(html, tag, attribute) {
+function assetsOf(html, tag, attribute, required) {
   const tags = new RegExp("<" + tag + "\\b[^>]*>", "gi");
   const url = new RegExp(attribute + '="([^"]+)"', "i");
   return [...html.matchAll(tags)].map((match) => {
+    if (required && !match[0].includes(required)) return null;
     const found = match[0].match(url);
     if (!found || found[1].startsWith("data:")) return null;
     assert(found[1].startsWith("/assets/"), "asset outside /assets/: " + found[1]);
@@ -32,7 +33,7 @@ function checkFonts() {
 
 async function check(page) {
   const html = readFileSync(join(__dirname, "../static", page + ".html"), "utf8");
-  const styles = assetsOf(html, "link", "href");
+  const styles = assetsOf(html, "link", "href", 'rel="stylesheet"');
   const scripts = assetsOf(html, "script", "src");
   assert.deepEqual(styles, ["common.css", page + ".css"]);
   assert.deepEqual(scripts, ["common.js", page + ".js"]);
@@ -146,7 +147,7 @@ async function check(page) {
   assert.equal(byId("board").children.length, 1, "removed services must leave the strip");
 
   if (page === "dashboard") {
-    const button = firstRow.children[4];
+    const button = firstRow.children.find((child) => child.className.includes("switch"));
     button.events.click();
     assert.equal(button.disabled, true);
     await settle();
