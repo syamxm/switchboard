@@ -140,7 +140,8 @@ var SB = (function(){
 
   function updatePort(r, state){
     r.port.dataset.state = state;
-    r.jack.textContent = state;
+    r.jack.textContent = state === "live" ? "\u25cf" :
+      state === "maintenance" ? "\u25d0" : "\u25cb";
   }
 
   // One cell per poll this page has observed, oldest on the left. A failed

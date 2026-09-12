@@ -47,15 +47,18 @@ different response shapes and validation rules, and only the dashboard writes.
 
 ### Design notes
 
-Both pages are one rack panel: a fixed top strip, a vertical rack label down
-the left edge on wide screens, and a hard-left asymmetric verdict block. There
+Both pages are one rack panel: the same floating waybar as syamxm.com (glass
+pill, purple hairline, accent glow, workspace chip — and no state stripe on the
+bar itself), a vertical rack label down the left edge on wide screens, and a
+hard-left asymmetric verdict block. Nothing here is a card: state lives in flat
+rows, text tokens and bracketed fields, never in boxed panels. There
 is one accent (violet) and three semantic state hues; everything else is
 carried by weight, spacing and a single cool-violet gray family.
 
 Three things on the page are data, not decoration, and should stay that way:
 
-- The **jackfield** above the channels — one module per service, state named in
-  text next to the lamp.
+- The **signal strip** above the channels — one token per service on a single
+  wrapped line, the way a bar reports sinks and networks. No card, no box.
 - The **poll history** on each channel strip — one cell per poll this page has
   observed, oldest on the left. A failed poll writes a hatched gap, so an
   outage in the checker reads differently from a service that was really down.

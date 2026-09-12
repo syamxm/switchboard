@@ -4,12 +4,12 @@
 
 .columnhead{
   display:grid;
-  grid-template-columns:3.5ch minmax(0,1fr) minmax(90px,150px) 6ch 14ch 78px;
+  grid-template-columns:3.5ch minmax(0,1fr) minmax(90px,150px) 6ch 14ch max-content;
   gap:16px;
 }
 .columnhead span:last-child{text-align:center}
 
-.svc{grid-template-columns:3.5ch minmax(0,1fr) minmax(90px,150px) 6ch 14ch 78px}
+.svc{grid-template-columns:3.5ch minmax(0,1fr) minmax(90px,150px) 6ch 14ch max-content}
 .svc .name{
   color:var(--fg);text-decoration:none;font-weight:500;
   min-width:0;overflow-wrap:anywhere;
@@ -20,30 +20,29 @@
 .svc .http{color:var(--dim);font-size:var(--step--2);font-weight:300}
 
 /* ---- patch switch ---- */
+/* A bracketed field, the way a TUI draws a toggle. No button chrome. */
 .switch{
-  display:grid;gap:1px;
-  width:78px;padding:7px 6px;
-  border:1px solid var(--line-strong);
-  background:var(--inset);
+  display:inline-flex;align-items:baseline;gap:6px;
+  padding:10px 4px;
+  border:0;background:none;
   color:var(--muted);
   font:inherit;font-size:var(--step--2);
-  text-align:center;
   cursor:pointer;
-  transition:border-color .25s var(--ease),background .25s var(--ease),
-             color .25s var(--ease),transform .12s var(--spring);
+  transition:color .25s var(--ease);
 }
+.switch::before{content:"["}
+.switch::after{content:"]"}
+.switch::before,.switch::after{color:var(--dim);transition:color .25s var(--ease)}
 .switch .switch-label{
   font-size:9px;font-weight:300;letter-spacing:.14em;color:var(--dim);
+  transition:color .25s var(--ease);
 }
-.switch:hover{background:var(--sel);border-color:var(--purple);color:var(--fg)}
-.switch:active:not([disabled]){transform:translateY(1px) scale(.97)}
-.switch[aria-checked="true"]{
-  color:var(--yellow);border-color:var(--yellow);
-  background:#1E1B1A;
-  background:color-mix(in srgb,var(--yellow) 8%,var(--inset));
-}
-.switch[aria-checked="true"] .switch-label{color:var(--yellow)}
-.switch[disabled]{cursor:progress;color:var(--dim);border-color:var(--line)}
+.switch:hover{color:var(--fg)}
+.switch:hover::before,.switch:hover::after{color:var(--purple)}
+.switch[aria-checked="true"]{color:var(--yellow);text-shadow:0 0 9px var(--glow-yellow)}
+.switch[aria-checked="true"]::before,
+.switch[aria-checked="true"]::after{color:var(--yellow)}
+.switch[disabled]{cursor:progress;color:var(--dim);text-shadow:none}
 
 /* ---- action log ---- */
 .log{margin-top:var(--bay);font-size:var(--step--1)}
@@ -66,25 +65,25 @@
 
 .errline{
   margin-top:var(--gap);
-  padding:12px 16px;
-  border-left:2px solid var(--red);
-  background:rgba(243,139,168,.07);
   color:var(--red);font-size:var(--step--1);
   max-width:68ch;
 }
+.errline::before{content:"! ";text-shadow:0 0 10px rgba(243,139,168,.4)}
 .errline:empty{display:none}
 
 @media(max-width:1040px){
-  .columnhead{grid-template-columns:minmax(0,1fr) 6ch 14ch 78px}
+  .columnhead{grid-template-columns:minmax(0,1fr) 6ch 14ch max-content}
   .columnhead .idx-head,.columnhead .history-head{display:none}
-  .svc{grid-template-columns:minmax(0,1fr) 6ch 14ch 78px}
+  .svc{grid-template-columns:minmax(0,1fr) 6ch 14ch max-content}
   .svc .idx{display:none}
   .svc .history{grid-column:1 / -1;height:12px;order:9}
 }
 @media(max-width:768px){
-  .columnhead{grid-template-columns:minmax(0,1fr) 78px}
+  .columnhead{grid-template-columns:minmax(0,1fr) max-content}
   .columnhead .state-head,.columnhead .http-head{display:none}
-  .svc{grid-template-columns:minmax(0,1fr) 78px;gap:6px 12px;padding:14px}
+  .svc{grid-template-columns:minmax(0,1fr) max-content;gap:6px 12px;padding:14px}
+  /* the column header already says maint.; the field just needs its value */
+  .switch .switch-label{display:none}
   .svc .name{grid-column:1;grid-row:1}
   .svc .badge{grid-column:1;grid-row:2}
   .svc .http{grid-column:1;grid-row:3}
