@@ -491,38 +491,49 @@ section + section{margin-top:var(--bay)}
 .poll[data-poll="received"]::before{content:"+ ";color:var(--green)}
 .poll[data-poll="failed"]::before{content:"! ";color:var(--yellow)}
 
-/* ---- signal strip ---- */
-/* A tray of tokens along one line, the way a bar reports sinks and networks.
-   It is a glance-level echo of the rows below, so it carries no chrome. */
+/* ---- jackfield ---- */
 .board{
-  display:flex;flex-wrap:wrap;
-  gap:6px 20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+  gap:2px;
   list-style:none;
-  padding:11px 0;
-  border-block:1px solid var(--line);
+  background:var(--line);
+  border:1px solid var(--line);
 }
 .port{
-  display:inline-flex;align-items:baseline;gap:8px;
   min-width:0;
+  background:var(--panel);
+  padding:12px 14px 13px;
   font-size:var(--step--2);
+  transition:background .35s var(--ease);
 }
+.port:hover{background:var(--sel)}
 .port .jack{
+  display:flex;align-items:center;gap:7px;
   color:var(--health);
-  text-shadow:0 0 9px currentColor;
-  transition:color .4s var(--ease);
+}
+.port .jack::before{
+  content:"";
+  width:9px;height:9px;flex:none;
+  border-radius:50%;
+  background:var(--health);
+  box-shadow:0 0 0 2px rgba(158,153,174,.22);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--health) 22%,transparent);
+  transition:background .4s var(--ease),box-shadow .4s var(--ease);
 }
 .port .label{
-  color:var(--dim);
+  display:block;
+  margin-top:7px;
+  color:var(--muted);
   overflow-wrap:anywhere;
-  transition:color .3s var(--ease);
+  font-weight:300;
 }
-.port:hover .label{color:var(--fg)}
 
 [data-state="live"]{--health:var(--green)}
 [data-state="maintenance"]{--health:var(--yellow)}
 [data-state="down"]{--health:var(--red)}
 body[data-stale="true"]{--health:var(--muted)}
-body[data-stale="true"] .port .jack{color:var(--dim);text-shadow:none}
+body[data-stale="true"] .port .jack{color:var(--dim)}
 
 /* ---- channel strips ---- */
 .bayhead{
@@ -554,17 +565,20 @@ body[data-stale="true"] .port .jack{color:var(--dim);text-shadow:none}
   position:relative;
   transition:background .35s var(--ease);
 }
-/* The state bar sits in the gutter, not as a border, so it can overhang. */
+/* A column of patch holes down the gutter. Always violet: the badge already
+   names the state, so the rail is rhythm, not a second signal. */
 .svc::before{
   content:"";
-  position:absolute;left:0;top:10px;bottom:10px;width:2px;
-  background:var(--dim);
-  transition:background .4s var(--ease);
+  position:absolute;left:0;top:9px;bottom:9px;width:4px;
+  background-image:radial-gradient(circle at 50% 50%,var(--purple) 1.8px,transparent 1.9px);
+  background-size:4px 7px;
+  background-repeat:repeat-y;
+  opacity:.8;
+  filter:drop-shadow(0 0 3px var(--glow-purple));
+  transition:opacity .35s var(--ease),filter .35s var(--ease);
 }
 .svc:hover{background:var(--panel)}
-.svc.live::before{background:var(--green)}
-.svc.maintenance::before{background:var(--yellow)}
-.svc.down::before{background:var(--red);box-shadow:0 0 14px rgba(243,139,168,.45)}
+.svc:hover::before{opacity:1;filter:drop-shadow(0 0 7px var(--glow-purple))}
 .svc .idx{
   color:var(--dim);
   font-size:var(--step--2);
@@ -676,6 +690,7 @@ body[data-stale="true"] .port .jack{color:var(--dim);text-shadow:none}
 @media(max-width:440px){
   .rack{gap:10px;padding:8px 12px}
   .rack .right{gap:10px;font-size:var(--step--2)}
+  .board{grid-template-columns:minmax(0,1fr)}
 }
 
 @media (prefers-reduced-motion:reduce){

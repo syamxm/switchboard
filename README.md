@@ -50,20 +50,23 @@ different response shapes and validation rules, and only the dashboard writes.
 Both pages are one rack panel: the same floating waybar as syamxm.com (glass
 pill, purple hairline, accent glow, workspace chip — and no state stripe on the
 bar itself), a vertical rack label down the left edge on wide screens, and a
-hard-left asymmetric verdict block. Nothing here is a card: state lives in flat
-rows, text tokens and bracketed fields, never in boxed panels. There
+hard-left asymmetric verdict block.
+
+The gutter beside each service row is a column of violet patch holes, not a
+state-coloured bar. State is already named in the badge and shown in the
+jackfield lamp; a third copy in the gutter was noise, so the rail carries
+rhythm instead. There
 is one accent (violet) and three semantic state hues; everything else is
 carried by weight, spacing and a single cool-violet gray family.
 
 Three things on the page are data, not decoration, and should stay that way:
 
-- The **signal strip** above the channels — one token per service on a single
-  wrapped line, the way a bar reports sinks and networks. No card, no box.
+- The **jackfield** above the channels — one module per service, state named in
+  text next to the lamp.
 - The **poll history** on each channel strip — one cell per poll this page has
   observed, oldest on the left. A failed poll writes a hatched gap, so an
   outage in the checker reads differently from a service that was really down.
   It lives in memory only and starts empty on every load.
-- The **state bar** in each row's gutter.
 
 Anything added here should say something true about the system or come out.
 
