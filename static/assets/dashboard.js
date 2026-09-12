@@ -14,6 +14,7 @@
   var notice = document.getElementById("notice");
   var footstat = document.getElementById("footstat");
   var transcript = document.getElementById("transcript");
+  var ansi = document.getElementById("ansi");
 
   var rows = Object.create(null);
   var lastChecked = null;
@@ -45,7 +46,10 @@
     poll.textContent = SB.pollText(nextPoll, pendingLoad);
     if(notice.textContent !== age.notice) notice.textContent = age.notice;
     if(age.stale){
-      if(banner.textContent !== "updates unavailable") banner.textContent = "updates unavailable";
+      if(banner.textContent !== "updates unavailable"){
+        banner.textContent = "updates unavailable";
+        SB.paintVerdict(ansi, "updates unavailable");
+      }
       greencount.textContent = "unverified";
     }
   }
@@ -127,7 +131,10 @@
 
     var summary = SB.summarize(sites);
     document.body.dataset.state = summary.state;
-    if(banner.textContent !== summary.verdict) banner.textContent = summary.verdict;
+    if(banner.textContent !== summary.verdict){
+      banner.textContent = summary.verdict;
+      SB.paintVerdict(ansi, summary.verdict);
+    }
     counts.textContent = summary.counts;
     greencount.textContent = summary.live + "/" + summary.total + " live";
 
@@ -235,6 +242,8 @@
     if(!document.hidden) load();
     tickChecked();
   });
+  SB.initCrt(document.getElementById("crt"));
+  SB.paintVerdict(ansi, banner.textContent);
   SB.showSkeleton(list);
   bootLine("[init] switchboard · requesting /api/sites");
   load();

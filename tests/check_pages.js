@@ -52,6 +52,11 @@ async function check(page) {
       this.events = {};
       this.className = "";
       this.textContent = "";
+      this.style = {
+        values: {},
+        setProperty(name, value) { this.values[name] = String(value); },
+        getPropertyValue(name) { return this.values[name] ?? ""; },
+      };
       this.classList = {
         add: (name) => { this.className += " " + name; },
         remove: (name) => { this.className = this.className.split(" ").filter((c) => c !== name).join(" "); },
@@ -110,6 +115,16 @@ async function check(page) {
   scripts.forEach((name) => runInContext(readAsset(name), context, {filename: name}));
   await settle();
   assert.equal(byId("banner").textContent, "1 service down");
+  // The verdict is also drawn as ANSI Shadow block letters, sized by column count.
+  assert(byId("ansi").textContent.split("\n").length % 6 === 0, "ansi art must be whole 6-row lines");
+  assert(byId("ansi").textContent.includes("\u2588"), "ansi art must use block glyphs");
+  assert(Number(byId("ansi").style.getPropertyValue("--ansi-cols")) > 0, "ansi column count");
+  assert(document.body.className.includes("ansi-on"), "plain headline hidden once art is painted");
+  assert.equal(byId("crt").getAttribute("aria-pressed"), "true", "crt defaults on");
+  byId("crt").events.click();
+  assert.equal(byId("crt").getAttribute("aria-pressed"), "false");
+  assert(document.body.className.includes("crt-off"), "crt toggle must reach the page");
+  byId("crt").events.click();
   assert.equal(byId("counts").textContent, "1 live / 1 maintenance / 1 down");
   assert.equal(byId("board").children.length, 3);
   assert.equal(byId("transcript").children.length, 3, "blocked storage must not prevent startup");
@@ -171,7 +186,7 @@ async function check(page) {
   assert.equal(byId("banner").textContent, "no services configured");
   assert.equal(byId("board").children.length, 0);
   assert.equal(timeouts.size, 0, "request timeouts must be cleared");
-  console.log(page + ": asset paths, transfer budget, polling, stale recovery and state checks passed");
+  console.log(page + ": asset paths, transfer budget, ansi banner, crt toggle, polling, stale recovery and state checks passed");
 }
 
 (async () => { checkFonts(); await check("status"); await check("dashboard"); })().catch((err) => {

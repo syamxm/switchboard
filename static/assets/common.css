@@ -185,33 +185,95 @@ body{
   padding-bottom:14vh;
 }
 
-/* The ground is not flat: a cold pool under the rack, warmed only where the
-   accent sits, plus vignette, phosphor lines and a drifting grain. */
+/* ==========================================================================
+   CRT
+   Five stacked layers over a dark ground: phosphor bloom, scanlines, an RGB
+   aperture mask, a slow roll bar, grain, and tube-edge falloff. Every layer is
+   inert to the pointer and every animation stops for reduced motion or when
+   the reader turns the effect off.
+   ========================================================================== */
+
+/* ambient bloom — the glass is never truly black */
 body::before{
   content:"";
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(120% 70% at 12% -8%,rgba(124,58,237,.10),transparent 62%),
-    radial-gradient(90% 60% at 92% 6%,rgba(167,139,250,.05),transparent 64%),
-    radial-gradient(ellipse 130% 95% at 50% 46%,transparent 54%,rgba(6,4,12,.55) 100%);
+    radial-gradient(120% 70% at 12% -8%,rgba(124,58,237,.11),transparent 62%),
+    radial-gradient(90% 60% at 92% 6%,rgba(167,139,250,.06),transparent 64%);
+}
+
+.crt{
+  position:fixed;inset:0;z-index:var(--z-atmosphere);pointer-events:none;
+  contain:layout paint;
+}
+
+/* scanlines everywhere; the RGB aperture mask only where pixels are big
+   enough to show it instead of turning into moire */
+.crt::before{
+  content:"";
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg,
+    rgba(0,0,0,0) 0 2px,rgba(0,0,0,.16) 2px 3px);
+  mix-blend-mode:multiply;
 }
 @media (min-width:769px){
-  body::before{
+  .crt::before{
     background:
-      radial-gradient(120% 70% at 12% -8%,rgba(124,58,237,.10),transparent 62%),
-      radial-gradient(90% 60% at 92% 6%,rgba(167,139,250,.05),transparent 64%),
-      radial-gradient(ellipse 130% 95% at 50% 46%,transparent 54%,rgba(6,4,12,.55) 100%),
-      repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.10) 2px 3px);
-    z-index:var(--z-atmosphere);
+      repeating-linear-gradient(180deg,
+        rgba(0,0,0,0) 0 2px,rgba(0,0,0,.16) 2px 3px),
+      repeating-linear-gradient(90deg,
+        rgba(255,64,64,.05) 0 1px,
+        rgba(64,255,64,.05) 1px 2px,
+        rgba(64,64,255,.05) 2px 3px);
   }
 }
-@media (min-width:769px) and (prefers-reduced-motion:no-preference){
-  body::after{
-    content:"";
-    position:fixed;inset:-60%;z-index:var(--z-atmosphere);pointer-events:none;
-    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
-    opacity:.042;
-    animation:grain 8s steps(10) infinite;
+
+/* tube geometry: rounded glass, corner falloff, edge vignette */
+.crt::after{
+  content:"";
+  position:absolute;inset:-2px;
+  border-radius:26px;
+  box-shadow:
+    inset 0 0 3px rgba(232,229,242,.10),
+    inset 0 0 90px rgba(6,4,12,.55),
+    inset 0 0 200px rgba(6,4,12,.75);
+  background:radial-gradient(ellipse 128% 96% at 50% 48%,transparent 52%,rgba(6,4,12,.62) 100%);
+}
+
+.crt-roll,.crt-grain{position:absolute;inset:0}
+
+/* the bar a misaligned vertical hold leaves crawling up the screen */
+.crt-roll{
+  background:linear-gradient(180deg,
+    transparent 0%,
+    rgba(232,229,242,.035) 44%,
+    rgba(232,229,242,.06) 50%,
+    rgba(232,229,242,.035) 56%,
+    transparent 100%);
+  height:36%;
+  inset:auto 0 auto 0;
+}
+
+.crt-grain{
+  inset:-60%;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+  opacity:.05;
+}
+
+@media (prefers-reduced-motion:no-preference){
+  .crt-roll{animation:roll 7.5s linear infinite}
+  .crt-grain{animation:grain 8s steps(10) infinite}
+  .crt::before{animation:flicker 5.5s steps(1) infinite}
+  @keyframes roll{
+    from{transform:translateY(-40vh)}
+    to{transform:translateY(140vh)}
+  }
+  @keyframes flicker{
+    0%,97%{opacity:1}
+    97.5%{opacity:.86}
+    98%{opacity:1}
+    98.5%{opacity:.92}
+    99%{opacity:1}
   }
   @keyframes grain{
     0%,100%{transform:translate(0,0)}
@@ -226,7 +288,55 @@ body::before{
     90%{transform:translate(9%,6%)}
   }
 }
-.tab-hidden::after{animation-play-state:paused}
+
+/* phosphor: every glyph carries a little of its own light */
+body{text-shadow:0 0 2px rgba(158,153,174,.30)}
+.rack,.foot,.transcript,.columnhead,.counts{text-shadow:0 0 2px rgba(110,104,127,.35)}
+.svc .name,.bayhead h2{text-shadow:0 0 6px rgba(232,229,242,.30)}
+.eyeline,.poll,.face{text-shadow:0 0 7px var(--glow-purple)}
+.svc .badge,.port .jack{text-shadow:0 0 9px currentColor}
+
+/* reader's escape hatch — off means off: no tube, no bloom, no motion */
+.crt-off .crt{display:none}
+body.crt-off,.crt-off *{text-shadow:none}
+
+.crtswitch{
+  border:1px solid var(--line-strong);
+  background:transparent;color:var(--dim);
+  font:inherit;font-size:var(--step--2);letter-spacing:.1em;
+  padding:3px 9px;cursor:pointer;
+  transition:color .25s var(--ease),border-color .25s var(--ease),background .25s var(--ease);
+}
+.crtswitch:hover{color:var(--fg);border-color:var(--purple);background:var(--sel)}
+.crtswitch[aria-pressed="true"]{color:var(--purple)}
+
+/* ---- ANSI Shadow verdict ---- */
+.ansiwrap{container-type:inline-size;margin:.1em 0 .3em}
+.ansi{
+  margin:0;
+  font-size:11px;
+  font-size:clamp(3px,calc(100cqw / var(--ansi-cols,96) / .607),17px);
+  line-height:1;
+  color:var(--health);
+  white-space:pre;
+  overflow:hidden;
+  transition:color .5s var(--ease);
+  text-shadow:
+    -.02em 0 rgba(243,139,168,.34),
+    .02em 0 rgba(137,220,235,.28),
+    0 0 .10em currentColor,
+    0 0 .42em currentColor;
+}
+.crt-off .ansi{text-shadow:none}
+/* Until the block letters are painted the plain headline carries the verdict. */
+.ansi-on .banner{
+  position:absolute;width:1px;height:1px;
+  margin:-1px;padding:0;border:0;
+  clip-path:inset(50%);overflow:hidden;white-space:nowrap;
+}
+.ansi:empty{display:none}
+
+.tab-hidden .crt-roll,.tab-hidden .crt-grain,.tab-hidden .crt::before{animation-play-state:paused}
 
 ::selection{background:var(--accent);color:var(--fg)}
 ::-webkit-scrollbar{width:10px}

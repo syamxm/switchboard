@@ -11,6 +11,7 @@
   var poll = document.getElementById("poll");
   var notice = document.getElementById("notice");
   var transcript = document.getElementById("transcript");
+  var ansi = document.getElementById("ansi");
 
   var rows = Object.create(null);
   var lastChecked = null;
@@ -75,7 +76,10 @@
 
     var summary = SB.summarize(sites);
     document.body.dataset.state = summary.state;
-    if(banner.textContent !== summary.verdict) banner.textContent = summary.verdict;
+    if(banner.textContent !== summary.verdict){
+      banner.textContent = summary.verdict;
+      SB.paintVerdict(ansi, summary.verdict);
+    }
     counts.textContent = summary.counts;
 
     var empty = document.getElementById("empty");
@@ -107,7 +111,10 @@
     footChecked.textContent = age.label + " · responses may be cached for 30s";
     poll.textContent = SB.pollText(nextPoll, fetching);
     if(notice.textContent !== age.notice) notice.textContent = age.notice;
-    if(age.stale && banner.textContent !== "updates unavailable") banner.textContent = "updates unavailable";
+    if(age.stale && banner.textContent !== "updates unavailable"){
+      banner.textContent = "updates unavailable";
+      SB.paintVerdict(ansi, "updates unavailable");
+    }
   }
   setInterval(tickChecked, 1000);
 
@@ -144,6 +151,8 @@
     if(!document.hidden) load();
     tickChecked();
   });
+  SB.initCrt(document.getElementById("crt"));
+  SB.paintVerdict(ansi, banner.textContent);
   SB.showSkeleton(list);
   bootLine("[init] switchboard · requesting /api/status");
   load();
