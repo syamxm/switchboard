@@ -40,8 +40,8 @@ docker compose up -d --build
 ## Status states
 
 - `maintenance` — flag file exists
-- `live` — site responded < 500 (checked every 30s, cached in memory)
-- `down` — request failed or 5xx
+- `live` — site root responded HTTP 200 (checked every 30s, cached in memory)
+- `down` — any other HTTP status, timeout, or connection/DNS failure. Redirects are followed to their final response.
 
 ## Dev
 
