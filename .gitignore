@@ -6,3 +6,4 @@ __pycache__/
 .agents/skills/
 .claude/skills/
 skills-lock.json
+PROMPT.md
