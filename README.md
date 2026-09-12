@@ -64,6 +64,22 @@ Three things on the page are data, not decoration, and should stay that way:
 
 Anything added here should say something true about the system or come out.
 
+The verdict is drawn twice: `#banner` holds the plain sentence for screen
+readers and for the no-JS case, and `#ansi` redraws it in ANSI Shadow block
+letters once the script runs. The glyph table in `common.js` was generated with
+pyfiglet (`ansi_shadow`) and covers A-Z, 0-9 and space. Wrapping is measured in
+glyph columns, not characters, because `I` is three columns wide and `M` is
+eleven; CSS then sizes the type from the column count so the widest line fits.
+The art needs U+2500-259F, which is why `common.css` embeds a second woff2 face
+for the box-drawing range. Don't drop it.
+
+The whole page sits behind a CRT overlay: scanlines, an RGB aperture mask on
+desktop, a rolling bar, grain, tube-edge falloff and a phosphor text glow. It
+is strong enough to get in the way of reading, so the rack carries a `crt`
+toggle; the preference is stored per browser and off means fully off. All of
+its motion also stops under `prefers-reduced-motion` and while the tab is
+hidden.
+
 ### Serving the assets
 
 Only `static/assets/` is mounted, at `/assets`. Mounting all of `static/` would
