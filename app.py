@@ -7,10 +7,12 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 SITES = [s.strip().lower() for s in os.environ.get("SITES", "").split(",") if s.strip()]
 FLAGS_DIR = Path(os.environ.get("FLAGS_DIR", "/flags"))
 STATIC_DIR = Path(__file__).parent / "static"
+ASSETS_DIR = STATIC_DIR / "assets"
 CACHE_TTL_SECONDS = 30
 CHECK_TIMEOUT_SECONDS = 4
 
@@ -20,6 +22,10 @@ HOSTNAME_RE = re.compile(
 )
 
 app = FastAPI(title="switchboard", docs_url=None, redoc_url=None, openapi_url=None)
+
+# Only the assets directory is mounted; mounting all of static/ would serve
+# the dashboard page through /assets as well.
+app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 _cache_lock = asyncio.Lock()
 _cache: dict = {"expires": 0.0, "statuses": {}}
