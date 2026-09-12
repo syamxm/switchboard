@@ -1,0 +1,24 @@
+/* Public status page: read-only rows with a state indicator dot. */
+
+.columnhead{display:flex;justify-content:space-between}
+.columnhead span:last-child{text-align:right}
+
+.svc{grid-template-columns:10ch 10px minmax(0,1fr) 15ch}
+.svc .name{color:var(--fg);font-weight:500;min-width:0;overflow-wrap:anywhere}
+.svc .badge{text-align:right}
+.svc .ind{
+  width:10px;height:10px;border-radius:50%;flex:none;
+  transition:background .3s var(--ease);
+}
+.svc.live .ind{background:var(--green)}
+.svc.maintenance .ind{background:var(--yellow)}
+.svc.down .ind{background:var(--red)}
+
+@media(max-width:768px){
+  .svc{grid-template-columns:10px minmax(0,1fr) 15ch;gap:10px;padding:14px 10px}
+  .svc .perm{display:none}
+}
+@media(max-width:440px){
+  .svc{grid-template-columns:10px minmax(0,1fr);gap:4px 10px}
+  .svc .badge{grid-column:2;text-align:left}
+}

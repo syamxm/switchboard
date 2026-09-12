@@ -1,21 +1,44 @@
 const assert = require("node:assert/strict");
 const {readFileSync} = require("node:fs");
 const {join} = require("node:path");
-const {runInNewContext} = require("node:vm");
+const {createContext, runInContext} = require("node:vm");
+
+const readAsset = (name) => readFileSync(join(__dirname, "../static/assets", name), "utf8");
+
+// Assets a page pulls in, in document order, with their query string stripped.
+// Anything not served from /assets/ would be a request off this origin.
+function assetsOf(html, tag, attribute) {
+  const tags = new RegExp("<" + tag + "\\b[^>]*>", "gi");
+  const url = new RegExp(attribute + '="([^"]+)"', "i");
+  return [...html.matchAll(tags)].map((match) => {
+    const found = match[0].match(url);
+    if (!found || found[1].startsWith("data:")) return null;
+    assert(found[1].startsWith("/assets/"), "asset outside /assets/: " + found[1]);
+    return found[1].slice("/assets/".length).split("?")[0];
+  }).filter(Boolean);
+}
+
+function checkFonts() {
+  const css = readAsset("common.css");
+  assert(!/@import\b/.test(css), "external CSS import");
+  for (const match of css.matchAll(/url\("([^"]+)"\)/g)) {
+    assert(match[1].startsWith("data:"), "non-inline CSS asset");
+  }
+  const fonts = [...css.matchAll(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/g)];
+  assert.equal(fonts.length, 2);
+  fonts.forEach((font) => assert.equal(Buffer.from(font[1], "base64").toString("ascii", 0, 4), "wOF2"));
+  assert(css.includes("SIL OPEN FONT LICENSE Version 1.1"));
+}
 
 async function check(page) {
   const html = readFileSync(join(__dirname, "../static", page + ".html"), "utf8");
-  assert(Buffer.byteLength(html) < 150000, "page exceeds inline budget");
-  assert(!/<(?:script|img|iframe)\b[^>]*src\s*=/i.test(html), "external asset element");
-  assert(!/<link\b[^>]*href="(?!data:)/i.test(html), "external stylesheet or font");
-  assert(!/@import\b/.test(html), "external CSS import");
-  for (const match of html.matchAll(/url\("([^"]+)"\)/g)) {
-    assert(match[1].startsWith("data:"), "non-inline CSS asset");
-  }
-  const fonts = [...html.matchAll(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/g)];
-  assert.equal(fonts.length, 2);
-  fonts.forEach((font) => assert.equal(Buffer.from(font[1], "base64").toString("ascii", 0, 4), "wOF2"));
-  assert(html.includes("SIL OPEN FONT LICENSE Version 1.1"));
+  const styles = assetsOf(html, "link", "href");
+  const scripts = assetsOf(html, "script", "src");
+  assert.deepEqual(styles, ["common.css", page + ".css"]);
+  assert.deepEqual(scripts, ["common.js", page + ".js"]);
+  const bytes = [html, ...styles.map(readAsset), ...scripts.map(readAsset)]
+    .reduce((total, text) => total + Buffer.byteLength(text), 0);
+  assert(bytes < 150000, "page and assets exceed transfer budget");
   assert(html.includes("<noscript>"));
 
   // A minimal DOM exercises the shipped scripts; layout remains a browser check.
@@ -82,7 +105,8 @@ async function check(page) {
     },
   };
   const settle = () => new Promise((resolve) => setImmediate(resolve));
-  runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], sandbox);
+  const context = createContext(sandbox);
+  scripts.forEach((name) => runInContext(readAsset(name), context, {filename: name}));
   await settle();
   assert.equal(byId("banner").textContent, "1 service down");
   assert.equal(byId("counts").textContent, "1 live / 1 maintenance / 1 down");
@@ -146,10 +170,10 @@ async function check(page) {
   assert.equal(byId("banner").textContent, "no services configured");
   assert.equal(byId("board").children.length, 0);
   assert.equal(timeouts.size, 0, "request timeouts must be cleared");
-  console.log(page + ": inline budget, fonts, polling, stale recovery and state checks passed");
+  console.log(page + ": asset paths, transfer budget, polling, stale recovery and state checks passed");
 }
 
-(async () => { await check("status"); await check("dashboard"); })().catch((err) => {
+(async () => { checkFonts(); await check("status"); await check("dashboard"); })().catch((err) => {
   console.error(err);
   process.exitCode = 1;
 });
