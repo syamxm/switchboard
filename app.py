@@ -75,14 +75,20 @@ async def http_statuses() -> dict[str, int | None]:
         return _cache["statuses"]
 
 
+# Assets are versioned with ?v= and cached, so the pages that point at them
+# must be revalidated every time; otherwise a browser can pair stale markup
+# with current scripts.
+PAGE_HEADERS = {"Cache-Control": "no-cache"}
+
+
 @app.get("/")
 async def dashboard_page() -> FileResponse:
-    return FileResponse(STATIC_DIR / "dashboard.html")
+    return FileResponse(STATIC_DIR / "dashboard.html", headers=PAGE_HEADERS)
 
 
 @app.get("/status")
 async def status_page() -> FileResponse:
-    return FileResponse(STATIC_DIR / "status.html")
+    return FileResponse(STATIC_DIR / "status.html", headers=PAGE_HEADERS)
 
 
 @app.get("/api/sites")

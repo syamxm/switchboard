@@ -130,6 +130,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --health:var(--muted);
 
   --line:rgba(124,58,237,.16);
+  --pill-bg:rgba(124,58,237,.12);
+  --pill-border:rgba(124,58,237,.4);
   --line-strong:rgba(124,58,237,.42);
   --glow-purple:rgba(124,58,237,.5);
   --glow-green:rgba(166,227,161,.4);
@@ -300,15 +302,18 @@ body{text-shadow:0 0 2px rgba(158,153,174,.30)}
 .crt-off .crt{display:none}
 body.crt-off,.crt-off *{text-shadow:none}
 
+/* same chip as the workspace pills either side of it */
 .crtswitch{
-  border:1px solid var(--line-strong);
-  background:transparent;color:var(--dim);
-  font:inherit;font-size:var(--step--2);letter-spacing:.1em;
-  padding:3px 9px;cursor:pointer;
-  transition:color .25s var(--ease),border-color .25s var(--ease),background .25s var(--ease);
+  padding:2px 11px;border-radius:999px;
+  border:1px solid var(--pill-border);
+  background:var(--pill-bg);
+  color:var(--purple);
+  font:inherit;font-size:var(--step--2);letter-spacing:.06em;
+  cursor:pointer;
+  transition:color .3s,border-color .3s,background .3s;
 }
-.crtswitch:hover{color:var(--fg);border-color:var(--purple);background:var(--sel)}
-.crtswitch[aria-pressed="true"]{color:var(--purple)}
+.crtswitch:hover,.crtswitch:focus-visible{color:var(--fg);border-color:var(--accent)}
+.crtswitch[aria-pressed="false"]{color:var(--dim);background:transparent}
 
 /* ---- ANSI Shadow verdict ---- */
 .ansiwrap{container-type:inline-size;margin:.1em 0 .3em}
@@ -372,35 +377,34 @@ body.crt-off,.crt-off *{text-shadow:none}
   @keyframes blink{50%{opacity:0}}
 }
 
-/* ---- rack: the fixed top strip ---- */
+/* ---- waybar ---- */
+/* Same floating glass pill as syamxm.com: purple hairline, soft accent glow,
+   nothing else. No status stripe on the bar. */
 .rack{
-  position:fixed;top:10px;left:10px;right:10px;z-index:var(--z-rack);
-  display:flex;align-items:center;gap:16px;
-  min-height:46px;padding:9px 18px;
-  background:rgba(13,11,20,.86);
-  background:color-mix(in srgb,var(--bg) 86%,transparent);
+  position:fixed;top:8px;left:10px;right:10px;z-index:var(--z-rack);
+  display:flex;align-items:center;gap:14px;
+  min-height:44px;padding:0 16px;
+  background:rgba(13,11,20,.85);
   backdrop-filter:blur(14px);
-  border:1px solid var(--line-strong);
-  border-radius:3px;
-  box-shadow:var(--lift);
+  border:1px solid rgba(124,58,237,.55);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 0 16px -8px var(--glow-purple);
   font-size:var(--step--1);color:var(--dim);
-}
-.rack::before{
-  content:"";
-  position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--health);
-  transition:background .5s var(--ease);
 }
 .rack a{color:var(--purple);text-decoration:none;white-space:nowrap}
 .rack a:hover{color:var(--fg)}
+/* the active-workspace chip */
 .face{
-  padding:2px 10px;
-  background:var(--accent);color:#fff;
-  font-size:var(--step--2);letter-spacing:.08em;
+  padding:2px 11px;border-radius:999px;
+  background:var(--accent);border:1px solid var(--accent);
+  color:#fff;font-weight:600;
+  font-size:var(--step--2);letter-spacing:.06em;
+  box-shadow:0 0 12px -3px var(--glow-purple);
 }
 .rack .right{
-  margin-left:auto;display:flex;align-items:center;gap:18px;
-  color:var(--muted);
+  margin-left:auto;display:flex;align-items:center;gap:14px;
+  color:var(--muted);white-space:nowrap;
 }
 
 /* ---- rail: rack label down the left edge, desktop only ---- */
@@ -487,48 +491,38 @@ section + section{margin-top:var(--bay)}
 .poll[data-poll="received"]::before{content:"+ ";color:var(--green)}
 .poll[data-poll="failed"]::before{content:"! ";color:var(--yellow)}
 
-/* ---- jackfield: the port board, square modules not pills ---- */
+/* ---- signal strip ---- */
+/* A tray of tokens along one line, the way a bar reports sinks and networks.
+   It is a glance-level echo of the rows below, so it carries no chrome. */
 .board{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
-  gap:2px;
+  display:flex;flex-wrap:wrap;
+  gap:6px 20px;
   list-style:none;
-  background:var(--line);
-  border:1px solid var(--line);
+  padding:11px 0;
+  border-block:1px solid var(--line);
 }
 .port{
+  display:inline-flex;align-items:baseline;gap:8px;
   min-width:0;
-  background:var(--panel);
-  padding:12px 14px 13px;
   font-size:var(--step--2);
-  transition:background .35s var(--ease);
 }
-.port:hover{background:var(--sel)}
 .port .jack{
-  display:flex;align-items:center;gap:7px;
   color:var(--health);
-}
-.port .jack::before{
-  content:"";
-  width:9px;height:9px;flex:none;
-  border-radius:50%;
-  background:var(--health);
-  box-shadow:0 0 0 2px rgba(158,153,174,.22);
-  box-shadow:0 0 0 2px color-mix(in srgb,var(--health) 22%,transparent);
-  transition:background .4s var(--ease),box-shadow .4s var(--ease);
+  text-shadow:0 0 9px currentColor;
+  transition:color .4s var(--ease);
 }
 .port .label{
-  display:block;
-  margin-top:7px;
-  color:var(--muted);
+  color:var(--dim);
   overflow-wrap:anywhere;
-  font-weight:300;
+  transition:color .3s var(--ease);
 }
+.port:hover .label{color:var(--fg)}
+
 [data-state="live"]{--health:var(--green)}
 [data-state="maintenance"]{--health:var(--yellow)}
 [data-state="down"]{--health:var(--red)}
 body[data-stale="true"]{--health:var(--muted)}
-body[data-stale="true"] .port .jack{color:var(--dim)}
+body[data-stale="true"] .port .jack{color:var(--dim);text-shadow:none}
 
 /* ---- channel strips ---- */
 .bayhead{
@@ -658,12 +652,10 @@ body[data-stale="true"] .port .jack{color:var(--dim)}
 .empty b{display:block;color:var(--fg);font-weight:500;margin-bottom:6px}
 .notice{
   margin-top:var(--gap);
-  padding:12px 16px;
-  border-left:2px solid var(--yellow);
-  background:rgba(249,226,175,.06);
   font-size:var(--step--1);color:var(--muted);
   max-width:68ch;
 }
+.notice::before{content:"! ";color:var(--yellow);text-shadow:0 0 8px var(--glow-yellow)}
 .notice:empty{display:none}
 
 /* ---- foot ---- */
@@ -683,8 +675,7 @@ body[data-stale="true"] .port .jack{color:var(--dim)}
 }
 @media(max-width:440px){
   .rack{gap:10px;padding:8px 12px}
-  .rack .right{gap:12px;font-size:var(--step--2)}
-  .board{grid-template-columns:minmax(0,1fr)}
+  .rack .right{gap:10px;font-size:var(--step--2)}
 }
 
 @media (prefers-reduced-motion:reduce){
